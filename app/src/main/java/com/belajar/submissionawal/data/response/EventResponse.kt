@@ -19,8 +19,8 @@ data class ListEventsItem(
 	@field:SerializedName("quota")
 	val quota: Int,
 
-	@field:SerializedName("registrant")
-	val registrant: Int,
+	@field:SerializedName("registrants")
+	val registrants: Int,
 
 	@field:SerializedName("beginTime")
 	val beginTime: String,
