@@ -12,7 +12,13 @@
         android:icon="@drawable/ic_finished"
         android:title="Finished" />
     <item
-        android:id="@+id/navigation_search"
-        android:icon="@android:drawable/ic_menu_search"
-        android:title="Search" />
+        android:id="@+id/navigation_favorite"
+        android:icon="@drawable/ic_favorite"
+        android:title="Favorite" />
+
+    <item
+        android:id="@+id/navigation_setting"
+        android:icon="@drawable/ic_settings"
+        android:title="Settings" />
+
 </menu>

@@ -8,8 +8,11 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.belajar.submissionawal.data.local.datastore.SettingPreferences
+import com.belajar.submissionawal.data.local.datastore.dataStore
 import com.belajar.submissionawal.databinding.FragmentFinishedBinding
 import com.belajar.submissionawal.ui.EventViewModel
+import com.belajar.submissionawal.ui.ViewModelFactory
 import com.belajar.submissionawal.ui.adapter.EventAdapter
 
 class FinishedFragment : Fragment() {
@@ -34,7 +37,9 @@ class FinishedFragment : Fragment() {
         val adapter = EventAdapter()
         binding.rvEvents.adapter = adapter
 
-        val viewModel = ViewModelProvider(requireActivity())[EventViewModel::class.java]
+        val pref = SettingPreferences.getInstance(requireContext().dataStore)
+        val factory = ViewModelFactory.getInstance(requireContext(), pref)
+        val viewModel = ViewModelProvider(requireActivity(), factory)[EventViewModel::class.java]
 
         viewModel.finishedEvents.observe(viewLifecycleOwner) { events ->
             adapter.submitList(events)
@@ -45,7 +50,7 @@ class FinishedFragment : Fragment() {
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            if (message.isNotEmpty()) {
+            if (message != null) {
                 Toast.makeText(requireActivity(), message, Toast.LENGTH_SHORT).show()
             }
         }

@@ -8,8 +8,11 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.belajar.submissionawal.data.local.datastore.SettingPreferences
+import com.belajar.submissionawal.data.local.datastore.dataStore
 import com.belajar.submissionawal.databinding.FragmentSearchBinding
 import com.belajar.submissionawal.ui.EventViewModel
+import com.belajar.submissionawal.ui.ViewModelFactory
 import com.belajar.submissionawal.ui.adapter.EventAdapter
 
 class SearchFragment : Fragment() {
@@ -32,7 +35,9 @@ class SearchFragment : Fragment() {
         binding.rvResults.layoutManager = LinearLayoutManager(requireContext())
         binding.rvResults.adapter = adapter
 
-        val viewModel = ViewModelProvider(requireActivity())[EventViewModel::class.java]
+        val pref = SettingPreferences.getInstance(requireContext().dataStore)
+        val factory = ViewModelFactory.getInstance(requireContext(), pref)
+        val viewModel = ViewModelProvider(requireActivity(), factory)[EventViewModel::class.java]
 
         binding.searchView.setupWithSearchBar(binding.searchBar)
         binding.searchView.editText.setOnEditorActionListener { textView, _, _ ->
@@ -60,7 +65,7 @@ class SearchFragment : Fragment() {
         }
 
         viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            if (message.isNotEmpty()) {
+            if (message != null) {
                 Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
             }
         }
