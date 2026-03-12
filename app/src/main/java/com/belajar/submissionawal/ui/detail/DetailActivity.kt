@@ -88,7 +88,7 @@ class DetailActivity : AppCompatActivity() {
             tvEventName.text = event.name
             tvOwnerName.text = "Penyelenggara: ${event.ownerName}"
             tvBeginTime.text = "Waktu: ${event.beginTime}"
-            val sisaKuota = event.quota - event.registrant
+            val sisaKuota = event.quota - event.registrants
             tvQuota.text = "Sisa Kuota: $sisaKuota"
             
             tvDescription.text = if (event.description.isNotEmpty()) {

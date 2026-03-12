@@ -53,5 +53,9 @@ class EventRepository private constructor(
             INSTANCE ?: synchronized(this) {
                 INSTANCE ?: EventRepository(apiService, favoriteEventDao)
             }.also { INSTANCE = it }
+
+        fun resetInstance() {
+            INSTANCE = null
+        }
     }
 }

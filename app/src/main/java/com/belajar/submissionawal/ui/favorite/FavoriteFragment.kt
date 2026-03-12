@@ -44,24 +44,30 @@ class FavoriteFragment : Fragment() {
         val adapter = EventAdapter()
         binding.rvFavorite.adapter = adapter
 
-        showLoading(true)
         viewModel.getFavoriteEvents().observe(viewLifecycleOwner) { favorites ->
-            showLoading(false)
+            binding.progressBar.visibility = View.GONE
             val items = favorites.map {
                 ListEventsItem(
                     id = it.id.toInt(),
                     name = it.name,
                     mediaCover = it.mediaCover ?: "",
-                    imageLogo = it.mediaCover ?: ""
+                    imageLogo = it.mediaCover ?: "",
+                    // Providing dummy values for other mandatory fields
+                    quota = 0,
+                    registrants = 0,
+                    beginTime = "",
+                    endTime = "",
+                    link = "",
+                    description = "",
+                    ownerName = "",
+                    summary = "",
+                    cityName = "",
+                    category = ""
                 )
             }
             adapter.submitList(items)
             binding.tvEmpty.visibility = if (items.isEmpty()) View.VISIBLE else View.GONE
         }
-    }
-
-    private fun showLoading(isLoading: Boolean) {
-        binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
     }
 
     override fun onDestroyView() {

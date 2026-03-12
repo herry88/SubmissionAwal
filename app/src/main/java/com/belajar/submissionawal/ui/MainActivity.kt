@@ -2,12 +2,17 @@ package com.belajar.submissionawal.ui
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
+import androidx.appcompat.app.AppCompatDelegate
 import com.belajar.submissionawal.R
+import com.belajar.submissionawal.data.local.datastore.SettingPreferences
+import com.belajar.submissionawal.data.local.datastore.dataStore
 import com.belajar.submissionawal.databinding.ActivityMainBinding
+import com.belajar.submissionawal.ui.setting.SettingViewModel
 
 class MainActivity : AppCompatActivity() {
 
