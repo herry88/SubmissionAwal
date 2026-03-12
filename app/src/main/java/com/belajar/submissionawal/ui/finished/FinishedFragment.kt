@@ -34,7 +34,11 @@ class FinishedFragment : Fragment() {
         val layoutManager = LinearLayoutManager(requireContext())
         binding.rvEvents.layoutManager = layoutManager
 
-        val adapter = EventAdapter()
+        val adapter = EventAdapter { event ->
+            val intent = android.content.Intent(requireContext(), com.belajar.submissionawal.ui.detail.DetailActivity::class.java)
+            intent.putExtra(com.belajar.submissionawal.ui.detail.DetailActivity.EXTRA_EVENT_ID, event.id)
+            startActivity(intent)
+        }
         binding.rvEvents.adapter = adapter
 
         val pref = SettingPreferences.getInstance(requireContext().dataStore)

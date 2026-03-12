@@ -31,7 +31,11 @@ class SearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val adapter = EventAdapter()
+        val adapter = EventAdapter { event ->
+            val intent = android.content.Intent(requireContext(), com.belajar.submissionawal.ui.detail.DetailActivity::class.java)
+            intent.putExtra(com.belajar.submissionawal.ui.detail.DetailActivity.EXTRA_EVENT_ID, event.id)
+            startActivity(intent)
+        }
         binding.rvResults.layoutManager = LinearLayoutManager(requireContext())
         binding.rvResults.adapter = adapter
 

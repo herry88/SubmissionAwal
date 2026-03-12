@@ -1,6 +1,9 @@
 package com.belajar.submissionawal.ui.setting
 
-import androidx.lifecycle.*
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
 import com.belajar.submissionawal.data.local.datastore.SettingPreferences
 import kotlinx.coroutines.launch
 
@@ -15,7 +18,7 @@ class SettingViewModel(private val pref: SettingPreferences) : ViewModel() {
         }
     }
 
-    fun getReminderSettings(): LiveData<Boolean> {
+    fun getReminderSetting(): LiveData<Boolean> {
         return pref.getReminderSetting().asLiveData()
     }
 

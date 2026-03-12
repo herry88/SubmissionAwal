@@ -39,7 +39,13 @@ class UpcomingFragment : Fragment() {
         val viewModel = ViewModelProvider(requireActivity(), factory)[EventViewModel::class.java]
 
         viewModel.upcomingEvents.observe(viewLifecycleOwner) { events ->
-            val adapter = EventAdapter()
+            val adapter = EventAdapter { event ->
+                val intent = com.belajar.submissionawal.ui.detail.DetailActivity.javaClass.let {
+                    android.content.Intent(requireContext(), com.belajar.submissionawal.ui.detail.DetailActivity::class.java)
+                }
+                intent.putExtra(com.belajar.submissionawal.ui.detail.DetailActivity.EXTRA_EVENT_ID, event.id)
+                startActivity(intent)
+            }
             adapter.submitList(events)
             binding.rvEvents.adapter = adapter
         }

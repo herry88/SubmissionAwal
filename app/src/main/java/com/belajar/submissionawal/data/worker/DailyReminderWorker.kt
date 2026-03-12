@@ -9,9 +9,11 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.belajar.submissionawal.R
 import com.belajar.submissionawal.di.Injection
-import java.lang.Exception
+import java.text.SimpleDateFormat
+import java.util.*
 
-class DailyReminderWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
+class DailyReminderWorker(context: Context, workerParams: WorkerParameters) :
+    CoroutineWorker(context, workerParams) {
 
     override suspend fun doWork(): Result {
         val repository = Injection.provideRepository(applicationContext)
@@ -23,17 +25,29 @@ class DailyReminderWorker(context: Context, params: WorkerParameters) : Coroutin
             }
             Result.success()
         } catch (e: Exception) {
-            Result.retry()
+            Result.failure()
         }
     }
 
-    private fun showNotification(title: String, message: String) {
-        val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    private fun showNotification(title: String, time: String) {
+        val notificationManager =
+            applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        
+        val intent = android.content.Intent(applicationContext, com.belajar.submissionawal.ui.MainActivity::class.java)
+        val pendingIntent = android.app.PendingIntent.getActivity(
+            applicationContext,
+            0,
+            intent,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) android.app.PendingIntent.FLAG_IMMUTABLE else 0
+        )
+
         val builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_upcoming) // Reuse existing icon
-            .setContentTitle(title)
-            .setContentText(message)
+            .setSmallIcon(R.drawable.ic_upcoming)
+            .setContentTitle("Daily Reminder: $title")
+            .setContentText("Event starts at: $time")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -45,13 +59,12 @@ class DailyReminderWorker(context: Context, params: WorkerParameters) : Coroutin
             notificationManager.createNotificationChannel(channel)
         }
 
-        val notification = builder.build()
-        notificationManager.notify(NOTIFICATION_ID, notification)
+        notificationManager.notify(NOTIFICATION_ID, builder.build())
     }
 
     companion object {
+        const val CHANNEL_ID = "daily_reminder_channel"
+        private const val CHANNEL_NAME = "Daily Reminder"
         private const val NOTIFICATION_ID = 1
-        private const val CHANNEL_ID = "channel_01"
-        private const val CHANNEL_NAME = "dicoding channel"
     }
 }

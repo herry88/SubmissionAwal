@@ -4,14 +4,13 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.CompoundButton
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
-import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.fragment.app.viewModels
+import androidx.work.Constraints
+import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import com.belajar.submissionawal.data.local.datastore.SettingPreferences
 import com.belajar.submissionawal.data.local.datastore.dataStore
 import com.belajar.submissionawal.data.worker.DailyReminderWorker
 import com.belajar.submissionawal.databinding.FragmentSettingBinding
@@ -23,9 +22,12 @@ class SettingFragment : Fragment() {
     private var _binding: FragmentSettingBinding? = null
     private val binding get() = _binding!!
 
+    private val viewModel: SettingViewModel by viewModels {
+        ViewModelFactory.getInstance(requireContext(), com.belajar.submissionawal.data.local.datastore.SettingPreferences.getInstance(requireContext().dataStore))
+    }
+
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentSettingBinding.inflate(inflater, container, false)
@@ -35,10 +37,7 @@ class SettingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val pref = SettingPreferences.getInstance(requireContext().dataStore)
-        val viewModel = ViewModelProvider(this, ViewModelFactory.getInstance(requireContext(), pref))[SettingViewModel::class.java]
-
-        viewModel.getThemeSettings().observe(viewLifecycleOwner) { isDarkModeActive: Boolean ->
+        viewModel.getThemeSettings().observe(viewLifecycleOwner) { isDarkModeActive ->
             if (isDarkModeActive) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
                 binding.switchTheme.isChecked = true
@@ -48,47 +47,47 @@ class SettingFragment : Fragment() {
             }
         }
 
-        binding.switchTheme.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
+        binding.switchTheme.setOnCheckedChangeListener { _, isChecked ->
             viewModel.saveThemeSetting(isChecked)
         }
 
-        viewModel.getReminderSettings().observe(viewLifecycleOwner) { isReminderActive: Boolean ->
+        viewModel.getReminderSetting().observe(viewLifecycleOwner) { isReminderActive ->
             binding.switchReminder.isChecked = isReminderActive
-            if (isReminderActive) {
+        }
+
+        binding.switchReminder.setOnCheckedChangeListener { _, isChecked ->
+            viewModel.saveReminderSetting(isChecked)
+            if (isChecked) {
                 startDailyReminder()
             } else {
                 cancelDailyReminder()
             }
         }
-
-        binding.switchReminder.setOnCheckedChangeListener { _: CompoundButton?, isChecked: Boolean ->
-            viewModel.saveReminderSetting(isChecked)
-        }
     }
 
     private fun startDailyReminder() {
         val workManager = WorkManager.getInstance(requireContext())
-        val dailyWorkRequest = PeriodicWorkRequestBuilder<DailyReminderWorker>(1, TimeUnit.DAYS)
-            .addTag(REMINDER_WORK_TAG)
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+        val dailyReminderRequest = PeriodicWorkRequestBuilder<DailyReminderWorker>(1, TimeUnit.DAYS)
+            .setConstraints(constraints)
+            .addTag("daily_reminder")
             .build()
         workManager.enqueueUniquePeriodicWork(
-            REMINDER_WORK_TAG,
-            ExistingPeriodicWorkPolicy.UPDATE,
-            dailyWorkRequest
+            "daily_reminder_work",
+            androidx.work.ExistingPeriodicWorkPolicy.UPDATE,
+            dailyReminderRequest
         )
     }
 
     private fun cancelDailyReminder() {
         val workManager = WorkManager.getInstance(requireContext())
-        workManager.cancelAllWorkByTag(REMINDER_WORK_TAG)
+        workManager.cancelAllWorkByTag("daily_reminder")
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
-    }
-
-    companion object {
-        private const val REMINDER_WORK_TAG = "daily_reminder"
     }
 }

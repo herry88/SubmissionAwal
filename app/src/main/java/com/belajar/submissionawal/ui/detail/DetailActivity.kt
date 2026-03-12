@@ -8,12 +8,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.Observer
 import com.belajar.submissionawal.R
 import com.belajar.submissionawal.data.local.datastore.SettingPreferences
 import com.belajar.submissionawal.data.local.datastore.dataStore
 import com.belajar.submissionawal.data.response.ListEventsItem
 import com.belajar.submissionawal.databinding.ActivityDetailBinding
 import com.belajar.submissionawal.ui.ViewModelFactory
+import com.belajar.submissionawal.data.local.entity.FavoriteEvent
 import com.bumptech.glide.Glide
 
 class DetailActivity : AppCompatActivity() {
@@ -21,7 +23,6 @@ class DetailActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDetailBinding
     private lateinit var viewModel: DetailViewModel
     private var currentEvent: ListEventsItem? = null
-    private var isFavorite: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,53 +36,53 @@ class DetailActivity : AppCompatActivity() {
         val eventId = intent.getIntExtra(EXTRA_EVENT_ID, -1)
         
         val factory = ViewModelFactory.getInstance(this, SettingPreferences.getInstance(dataStore))
-        viewModel = ViewModelProvider(this, factory)[DetailViewModel::class.java]
+        viewModel = ViewModelProvider(this, factory).get(DetailViewModel::class.java)
 
         if (eventId != -1) {
             viewModel.getDetailEvent(eventId.toString())
-            viewModel.getFavoriteEventById(eventId.toString()).observe(this) { favorite ->
-                isFavorite = favorite != null
-                updateFavoriteIcon()
-            }
+            
+            viewModel.getFavoriteEventById(eventId).observe(this, Observer { favoriteEvent ->
+                if (favoriteEvent != null) {
+                    binding.fabFavorite.setImageResource(R.drawable.ic_favorite)
+                    binding.fabFavorite.setOnClickListener {
+                        viewModel.deleteFavorite(favoriteEvent)
+                    }
+                } else {
+                    binding.fabFavorite.setImageResource(R.drawable.ic_favorite_border)
+                    binding.fabFavorite.setOnClickListener {
+                        currentEvent?.let { event ->
+                            val newFavorite = FavoriteEvent(
+                                id = event.id,
+                                name = event.name,
+                                mediaCover = event.mediaCover.ifEmpty { event.imageLogo }
+                            )
+                            viewModel.insertFavorite(newFavorite)
+                        }
+                    }
+                }
+            })
         }
 
-        viewModel.eventDetail.observe(this) { event ->
+        viewModel.eventDetail.observe(this, Observer { event ->
             if (event != null) {
                 currentEvent = event
                 displayEvent(event)
+                binding.fabFavorite.visibility = View.VISIBLE
             }
-        }
+        })
 
-        viewModel.isLoading.observe(this) {
-            showLoading(it)
-        }
+        viewModel.isLoading.observe(this, Observer { isLoading ->
+            showLoading(isLoading)
+        })
 
-        viewModel.errorMessage.observe(this) {
-            if (it != null) {
-                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+        viewModel.errorMessage.observe(this, Observer { message ->
+            if (message != null) {
+                Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
             }
-        }
+        })
 
-        binding.fabFavorite.setOnClickListener {
-            currentEvent?.let { event ->
-                if (isFavorite) {
-                    viewModel.deleteFavorite(event.id.toString(), event.name, event.mediaCover)
-                    Toast.makeText(this, "Removed from favorites", Toast.LENGTH_SHORT).show()
-                } else {
-                    viewModel.saveFavorite(event)
-                    Toast.makeText(this, "Added to favorites", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
     }
 
-    private fun updateFavoriteIcon() {
-        if (isFavorite) {
-            binding.fabFavorite.setImageResource(R.drawable.ic_favorite)
-        } else {
-            binding.fabFavorite.setImageResource(R.drawable.ic_favorite_border)
-        }
-    }
 
     private fun displayEvent(event: ListEventsItem) {
         binding.apply {

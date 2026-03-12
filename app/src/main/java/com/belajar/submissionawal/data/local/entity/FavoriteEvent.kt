@@ -6,7 +6,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "favorite_event")
 data class FavoriteEvent(
     @PrimaryKey
-    val id: String,
+    val id: Int,
     val name: String,
     val mediaCover: String? = null
 )

@@ -28,6 +28,7 @@
         android:label="Finished Events"
         tools:layout="@layout/fragment_finished" />
 
+
     <fragment
         android:id="@+id/navigation_favorite"
         android:name="com.belajar.submissionawal.ui.favorite.FavoriteFragment"

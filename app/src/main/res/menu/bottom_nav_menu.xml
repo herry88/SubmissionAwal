@@ -2,23 +2,28 @@
     <item
         android:id="@+id/navigation_home"
         android:icon="@android:drawable/ic_menu_today"
-        android:title="Home" />
+        android:title="@string/home" />
+    <item
+        android:id="@+id/navigation_search"
+        android:icon="@android:drawable/ic_menu_search"
+        android:title="Search" />
     <item
         android:id="@+id/navigation_upcoming"
         android:icon="@drawable/ic_upcoming"
-        android:title="Upcoming" />
+        android:title="@string/upcoming" />
     <item
         android:id="@+id/navigation_finished"
         android:icon="@drawable/ic_finished"
-        android:title="Finished" />
+        android:title="@string/finished" />
+
     <item
         android:id="@+id/navigation_favorite"
-        android:icon="@drawable/ic_favorite"
-        android:title="Favorite" />
+        android:icon="@android:drawable/btn_star_big_off"
+        android:title="@string/favorite" />
 
     <item
         android:id="@+id/navigation_setting"
         android:icon="@drawable/ic_settings"
-        android:title="Settings" />
+        android:title="@string/settings" />
 
 </menu>
