@@ -35,45 +35,47 @@ class FavoriteFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val layoutManager = LinearLayoutManager(requireContext())
-        binding.rvFavorite.layoutManager = layoutManager
-        val itemDecoration = DividerItemDecoration(requireContext(), layoutManager.orientation)
-        binding.rvFavorite.addItemDecoration(itemDecoration)
+        binding.apply {
+            val layoutManager = LinearLayoutManager(requireContext())
+            rvFavorite.layoutManager = layoutManager
+            val itemDecoration = DividerItemDecoration(requireContext(), layoutManager.orientation)
+            rvFavorite.addItemDecoration(itemDecoration)
 
-        viewModel.getFavoriteEvents().observe(viewLifecycleOwner) { favoriteEvents ->
-            if (favoriteEvents.isNullOrEmpty()) {
-                binding.tvNoFavorite.visibility = View.VISIBLE
-                binding.rvFavorite.visibility = View.GONE
-            } else {
-                binding.tvNoFavorite.visibility = View.GONE
-                binding.rvFavorite.visibility = View.VISIBLE
-                
-                val adapter = EventAdapter { event ->
-                    val intent = Intent(requireContext(), DetailActivity::class.java)
-                    intent.putExtra(DetailActivity.EXTRA_EVENT_ID, event.id)
-                    startActivity(intent)
+            viewModel.getFavoriteEvents().observe(viewLifecycleOwner) { favoriteEvents ->
+                if (favoriteEvents.isNullOrEmpty()) {
+                    tvNoFavorite.visibility = View.VISIBLE
+                    rvFavorite.visibility = View.GONE
+                } else {
+                    tvNoFavorite.visibility = View.GONE
+                    rvFavorite.visibility = View.VISIBLE
+                    
+                    val adapter = EventAdapter { event ->
+                        val intent = android.content.Intent(requireContext(), DetailActivity::class.java)
+                        intent.putExtra(DetailActivity.EXTRA_EVENT_ID, event.id)
+                        startActivity(intent)
+                    }
+                    
+                    val eventsList = favoriteEvents.map {
+                        com.belajar.submissionawal.data.response.ListEventsItem(
+                            quota = 0,
+                            registrants = 0,
+                            beginTime = null,
+                            endTime = null,
+                            link = null,
+                            description = null,
+                            id = it.id,
+                            imageLogo = it.mediaCover,
+                            mediaCover = it.mediaCover,
+                            name = it.name,
+                            ownerName = null,
+                            summary = null,
+                            cityName = null,
+                            category = null
+                        )
+                    }
+                    rvFavorite.adapter = adapter
+                    adapter.submitList(eventsList)
                 }
-                
-                val eventsList = favoriteEvents.map {
-                    com.belajar.submissionawal.data.response.ListEventsItem(
-                        quota = 0,
-                        registrants = 0,
-                        beginTime = "",
-                        endTime = "",
-                        link = "",
-                        description = "",
-                        id = it.id,
-                        imageLogo = it.mediaCover ?: "",
-                        mediaCover = it.mediaCover ?: "",
-                        name = it.name,
-                        ownerName = "",
-                        summary = "",
-                        cityName = "",
-                        category = ""
-                    )
-                }
-                binding.rvFavorite.adapter = adapter
-                adapter.submitList(eventsList)
             }
         }
     }

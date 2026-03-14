@@ -37,40 +37,93 @@ class SettingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.getThemeSettings().observe(viewLifecycleOwner) { isDarkModeActive ->
-            if (isDarkModeActive) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-                binding.switchTheme.isChecked = true
-            } else {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-                binding.switchTheme.isChecked = false
+        binding.apply {
+            viewModel.getThemeSettings().observe(viewLifecycleOwner) { isDarkModeActive ->
+                if (isDarkModeActive) {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+                    switchTheme.isChecked = true
+                } else {
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+                    switchTheme.isChecked = false
+                }
             }
-        }
 
-        binding.switchTheme.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.saveThemeSetting(isChecked)
-        }
+            switchTheme.setOnCheckedChangeListener { _, isChecked ->
+                viewModel.saveThemeSetting(isChecked)
+            }
 
-        viewModel.getReminderSetting().observe(viewLifecycleOwner) { isReminderActive ->
-            binding.switchReminder.isChecked = isReminderActive
-        }
+            viewModel.getReminderSetting().observe(viewLifecycleOwner) { isReminderActive ->
+                switchReminder.isChecked = isReminderActive
+                layoutTimePicker.visibility = if (isReminderActive) View.VISIBLE else View.GONE
+            }
 
-        binding.switchReminder.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.saveReminderSetting(isChecked)
-            if (isChecked) {
-                startDailyReminder()
-            } else {
-                cancelDailyReminder()
+            switchReminder.setOnCheckedChangeListener { _, isChecked ->
+                viewModel.saveReminderSetting(isChecked)
+                if (isChecked) {
+                    viewModel.getReminderTime().value?.let { startDailyReminder(it) }
+                } else {
+                    cancelDailyReminder()
+                }
+            }
+
+            viewModel.getReminderTime().observe(viewLifecycleOwner) { time ->
+                tvReminderTime.text = time
+                if (switchReminder.isChecked) {
+                    startDailyReminder(time)
+                }
+            }
+
+            tvReminderTime.setOnClickListener {
+                showTimePicker()
             }
         }
     }
 
-    private fun startDailyReminder() {
+    private fun showTimePicker() {
+        val currentTime = viewModel.getReminderTime().value ?: "09:00"
+        val parts = currentTime.split(":")
+        val hour = parts[0].toInt()
+        val minute = parts[1].toInt()
+
+        val picker = com.google.android.material.timepicker.MaterialTimePicker.Builder()
+            .setTimeFormat(com.google.android.material.timepicker.TimeFormat.CLOCK_24H)
+            .setHour(hour)
+            .setMinute(minute)
+            .setTitleText("Pilih Waktu Pengingat")
+            .build()
+
+        picker.addOnPositiveButtonClickListener {
+            val newTime = String.format("%02d:%02d", picker.hour, picker.minute)
+            viewModel.saveReminderTime(newTime)
+        }
+
+        picker.show(childFragmentManager, "TimePicker")
+    }
+
+    private fun startDailyReminder(time: String) {
+        val parts = time.split(":")
+        val hour = parts[0].toInt()
+        val minute = parts[1].toInt()
+
+        val calendar = java.util.Calendar.getInstance()
+        val now = java.util.Calendar.getInstance()
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, hour)
+        calendar.set(java.util.Calendar.MINUTE, minute)
+        calendar.set(java.util.Calendar.SECOND, 0)
+        calendar.set(java.util.Calendar.MILLISECOND, 0)
+
+        if (calendar.before(now)) {
+            calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }
+
+        val initialDelay = calendar.timeInMillis - now.timeInMillis
+
         val workManager = WorkManager.getInstance(requireContext())
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
             .build()
-        val dailyReminderRequest = PeriodicWorkRequestBuilder<DailyReminderWorker>(1, TimeUnit.DAYS)
+        val dailyReminderRequest = PeriodicWorkRequestBuilder<DailyReminderWorker>(1, java.util.concurrent.TimeUnit.DAYS)
+            .setInitialDelay(initialDelay, java.util.concurrent.TimeUnit.MILLISECONDS)
             .setConstraints(constraints)
             .addTag("daily_reminder")
             .build()

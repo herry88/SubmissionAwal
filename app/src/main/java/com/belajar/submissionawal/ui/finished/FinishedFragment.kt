@@ -31,35 +31,37 @@ class FinishedFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val layoutManager = LinearLayoutManager(requireContext())
-        binding.rvEvents.layoutManager = layoutManager
+        binding.apply {
+            val layoutManager = LinearLayoutManager(requireContext())
+            rvEvents.layoutManager = layoutManager
 
-        val adapter = EventAdapter { event ->
-            val intent = android.content.Intent(requireContext(), com.belajar.submissionawal.ui.detail.DetailActivity::class.java)
-            intent.putExtra(com.belajar.submissionawal.ui.detail.DetailActivity.EXTRA_EVENT_ID, event.id)
-            startActivity(intent)
-        }
-        binding.rvEvents.adapter = adapter
-
-        val pref = SettingPreferences.getInstance(requireContext().dataStore)
-        val factory = ViewModelFactory.getInstance(requireContext(), pref)
-        val viewModel = ViewModelProvider(requireActivity(), factory)[EventViewModel::class.java]
-
-        viewModel.finishedEvents.observe(viewLifecycleOwner) { events ->
-            adapter.submitList(events)
-        }
-
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        }
-
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            if (message != null) {
-                Toast.makeText(requireActivity(), message, Toast.LENGTH_SHORT).show()
+            val adapter = EventAdapter { event ->
+                val intent = android.content.Intent(requireContext(), com.belajar.submissionawal.ui.detail.DetailActivity::class.java)
+                intent.putExtra(com.belajar.submissionawal.ui.detail.DetailActivity.EXTRA_EVENT_ID, event.id)
+                startActivity(intent)
             }
-        }
+            rvEvents.adapter = adapter
 
-        viewModel.getFinishedEvents()
+            val pref = SettingPreferences.getInstance(requireContext().dataStore)
+            val factory = ViewModelFactory.getInstance(requireContext(), pref)
+            val viewModel = ViewModelProvider(requireActivity(), factory)[EventViewModel::class.java]
+
+            viewModel.finishedEvents.observe(viewLifecycleOwner) { events ->
+                adapter.submitList(events)
+            }
+
+            viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+                progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
+
+            viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+                if (message != null) {
+                    Toast.makeText(requireActivity(), message, Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            viewModel.getFinishedEvents()
+        }
     }
 
     override fun onDestroyView() {

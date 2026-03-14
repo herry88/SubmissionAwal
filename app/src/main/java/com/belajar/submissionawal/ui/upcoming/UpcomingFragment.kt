@@ -31,36 +31,35 @@ class UpcomingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val layoutManager = LinearLayoutManager(requireContext())
-        binding.rvEvents.layoutManager = layoutManager
+        binding.apply {
+            val layoutManager = LinearLayoutManager(requireContext())
+            rvEvents.layoutManager = layoutManager
 
-        val pref = SettingPreferences.getInstance(requireContext().dataStore)
-        val factory = ViewModelFactory.getInstance(requireContext(), pref)
-        val viewModel = ViewModelProvider(requireActivity(), factory)[EventViewModel::class.java]
-
-        viewModel.upcomingEvents.observe(viewLifecycleOwner) { events ->
-            val adapter = EventAdapter { event ->
-                val intent = com.belajar.submissionawal.ui.detail.DetailActivity.javaClass.let {
-                    android.content.Intent(requireContext(), com.belajar.submissionawal.ui.detail.DetailActivity::class.java)
+            val pref = SettingPreferences.getInstance(requireContext().dataStore)
+            val factory = ViewModelFactory.getInstance(requireContext(), pref)
+            val viewModel = ViewModelProvider(requireActivity(), factory)[EventViewModel::class.java]
+            viewModel.upcomingEvents.observe(viewLifecycleOwner) { events ->
+                val adapter = EventAdapter { event ->
+                    val intent = android.content.Intent(requireContext(), com.belajar.submissionawal.ui.detail.DetailActivity::class.java)
+                    intent.putExtra(com.belajar.submissionawal.ui.detail.DetailActivity.EXTRA_EVENT_ID, event.id)
+                    startActivity(intent)
                 }
-                intent.putExtra(com.belajar.submissionawal.ui.detail.DetailActivity.EXTRA_EVENT_ID, event.id)
-                startActivity(intent)
+                adapter.submitList(events)
+                rvEvents.adapter = adapter
             }
-            adapter.submitList(events)
-            binding.rvEvents.adapter = adapter
-        }
 
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        }
-
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            if (message != null) {
-                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+                progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
             }
-        }
 
-        viewModel.getUpcomingEvents()
+            viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+                if (message != null) {
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            viewModel.getUpcomingEvents()
+        }
     }
 
     override fun onDestroyView() {

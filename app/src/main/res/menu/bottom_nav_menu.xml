@@ -21,9 +21,4 @@
         android:icon="@android:drawable/btn_star_big_off"
         android:title="@string/favorite" />
 
-    <item
-        android:id="@+id/navigation_setting"
-        android:icon="@drawable/ic_settings"
-        android:title="@string/settings" />
-
 </menu>

@@ -15,6 +15,7 @@ class SettingPreferences private constructor(private val dataStore: DataStore<Pr
 
     private val THEME_KEY = booleanPreferencesKey("theme_setting")
     private val REMINDER_KEY = booleanPreferencesKey("reminder_setting")
+    private val REMINDER_TIME_KEY = androidx.datastore.preferences.core.stringPreferencesKey("reminder_time")
 
     fun getThemeSetting(): Flow<Boolean> {
         return dataStore.data.map { preferences ->
@@ -37,6 +38,18 @@ class SettingPreferences private constructor(private val dataStore: DataStore<Pr
     suspend fun saveReminderSetting(isReminderActive: Boolean) {
         dataStore.edit { preferences ->
             preferences[REMINDER_KEY] = isReminderActive
+        }
+    }
+
+    fun getReminderTime(): Flow<String> {
+        return dataStore.data.map { preferences ->
+            preferences[REMINDER_TIME_KEY] ?: "09:00"
+        }
+    }
+
+    suspend fun saveReminderTime(time: String) {
+        dataStore.edit { preferences ->
+            preferences[REMINDER_TIME_KEY] = time
         }
     }
 

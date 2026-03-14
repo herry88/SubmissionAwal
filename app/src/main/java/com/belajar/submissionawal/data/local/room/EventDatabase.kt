@@ -6,7 +6,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.belajar.submissionawal.data.local.entity.FavoriteEvent
 
-@Database(entities = [FavoriteEvent::class], version = 2, exportSchema = false)
+@Database(entities = [FavoriteEvent::class], version = 3, exportSchema = false)
 abstract class EventDatabase : RoomDatabase() {
     abstract fun favoriteEventDao(): FavoriteEventDao
 

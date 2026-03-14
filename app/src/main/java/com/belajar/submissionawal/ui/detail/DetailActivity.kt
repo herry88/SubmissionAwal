@@ -4,6 +4,9 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import java.text.SimpleDateFormat
+import java.util.Locale
+import java.util.TimeZone
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.text.HtmlCompat
@@ -29,47 +32,49 @@ class DetailActivity : AppCompatActivity() {
         binding = ActivityDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        setSupportActionBar(binding.toolbar)
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Detail Event"
+        binding.apply {
+            setSupportActionBar(toolbar)
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            supportActionBar?.title = "Detail Event"
 
-        val eventId = intent.getIntExtra(EXTRA_EVENT_ID, -1)
-        
-        val factory = ViewModelFactory.getInstance(this, SettingPreferences.getInstance(dataStore))
-        viewModel = ViewModelProvider(this, factory).get(DetailViewModel::class.java)
-
-        if (eventId != -1) {
-            viewModel.getDetailEvent(eventId.toString())
+            val eventId = intent.getIntExtra(EXTRA_EVENT_ID, -1)
             
-            viewModel.getFavoriteEventById(eventId).observe(this, Observer { favoriteEvent ->
-                if (favoriteEvent != null) {
-                    binding.fabFavorite.setImageResource(R.drawable.ic_favorite)
-                    binding.fabFavorite.setOnClickListener {
-                        viewModel.deleteFavorite(favoriteEvent)
-                    }
-                } else {
-                    binding.fabFavorite.setImageResource(R.drawable.ic_favorite_border)
-                    binding.fabFavorite.setOnClickListener {
-                        currentEvent?.let { event ->
-                            val newFavorite = FavoriteEvent(
-                                id = event.id,
-                                name = event.name,
-                                mediaCover = event.mediaCover.ifEmpty { event.imageLogo }
-                            )
-                            viewModel.insertFavorite(newFavorite)
+            val factory = ViewModelFactory.getInstance(this@DetailActivity, SettingPreferences.getInstance(dataStore))
+            viewModel = ViewModelProvider(this@DetailActivity, factory).get(DetailViewModel::class.java)
+
+            if (eventId != -1) {
+                viewModel.getDetailEvent(eventId.toString())
+                
+                viewModel.getFavoriteEventById(eventId).observe(this@DetailActivity, Observer { favoriteEvent ->
+                    if (favoriteEvent != null) {
+                        fabFavorite.setImageResource(R.drawable.ic_favorite)
+                        fabFavorite.setOnClickListener {
+                            viewModel.deleteFavorite(favoriteEvent)
+                        }
+                    } else {
+                        fabFavorite.setImageResource(R.drawable.ic_favorite_border)
+                        fabFavorite.setOnClickListener {
+                            currentEvent?.let { event ->
+                                val newFavorite = FavoriteEvent(
+                                    id = event.id,
+                                    name = event.name ?: "-",
+                                    mediaCover = if (!event.mediaCover.isNullOrEmpty()) event.mediaCover else event.imageLogo
+                                )
+                                viewModel.insertFavorite(newFavorite)
+                            }
                         }
                     }
+                })
+            }
+
+            viewModel.eventDetail.observe(this@DetailActivity, Observer { event ->
+                if (event != null) {
+                    currentEvent = event
+                    displayEvent(event)
+                    fabFavorite.visibility = View.VISIBLE
                 }
             })
         }
-
-        viewModel.eventDetail.observe(this, Observer { event ->
-            if (event != null) {
-                currentEvent = event
-                displayEvent(event)
-                binding.fabFavorite.visibility = View.VISIBLE
-            }
-        })
 
         viewModel.isLoading.observe(this, Observer { isLoading ->
             showLoading(isLoading)
@@ -86,32 +91,49 @@ class DetailActivity : AppCompatActivity() {
 
     private fun displayEvent(event: ListEventsItem) {
         binding.apply {
-            tvEventName.text = event.name
-            tvOwnerName.text = "Penyelenggara: ${event.ownerName}"
-            tvBeginTime.text = "Waktu: ${event.beginTime}"
+            tvEventName.text = event.name ?: "-"
+            tvOwnerName.text = "Penyelenggara: ${event.ownerName ?: "-"}"
+            tvBeginTime.text = "Waktu: ${formatToIndonesian(event.beginTime)}"
             val sisaKuota = event.quota - event.registrants
             tvQuota.text = "Sisa Kuota: $sisaKuota"
             
-            tvDescription.text = if (event.description.isNotEmpty()) {
-                HtmlCompat.fromHtml(event.description, HtmlCompat.FROM_HTML_MODE_LEGACY)
+            val desc = event.description
+            tvDescription.text = if (!desc.isNullOrEmpty()) {
+                HtmlCompat.fromHtml(desc, HtmlCompat.FROM_HTML_MODE_LEGACY)
             } else {
                 "Tidak ada deskripsi."
             }
 
-            val imageUrl = if (event.mediaCover.isNotEmpty()) event.mediaCover else event.imageLogo
+            val imageUrl = if (!event.mediaCover.isNullOrEmpty()) event.mediaCover else event.imageLogo
             Glide.with(this@DetailActivity)
                 .load(imageUrl)
                 .into(ivEventImage)
 
             btnOpenLink.setOnClickListener {
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(event.link))
-                startActivity(intent)
+                val link = event.link
+                if (!link.isNullOrEmpty()) {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
+                    startActivity(intent)
+                }
             }
         }
     }
 
     private fun showLoading(isLoading: Boolean) {
         binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
+
+    private fun formatToIndonesian(dateString: String?): String {
+        if (dateString.isNullOrEmpty()) return "-"
+        return try {
+            val inputFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale("id", "ID"))
+            val outputFormat = SimpleDateFormat("dd MMMM yyyy, HH.mm 'WIB'", Locale("id", "ID"))
+            outputFormat.timeZone = TimeZone.getTimeZone("Asia/Jakarta")
+            val date = inputFormat.parse(dateString)
+            if (date != null) outputFormat.format(date) else dateString
+        } catch (e: Exception) {
+            dateString
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {

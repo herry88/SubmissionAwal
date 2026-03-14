@@ -27,4 +27,14 @@ class SettingViewModel(private val pref: SettingPreferences) : ViewModel() {
             pref.saveReminderSetting(isReminderActive)
         }
     }
+
+    fun getReminderTime(): LiveData<String> {
+        return pref.getReminderTime().asLiveData()
+    }
+
+    fun saveReminderTime(time: String) {
+        viewModelScope.launch {
+            pref.saveReminderTime(time)
+        }
+    }
 }

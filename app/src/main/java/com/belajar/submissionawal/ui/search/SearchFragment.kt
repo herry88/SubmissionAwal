@@ -31,46 +31,48 @@ class SearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val adapter = EventAdapter { event ->
-            val intent = android.content.Intent(requireContext(), com.belajar.submissionawal.ui.detail.DetailActivity::class.java)
-            intent.putExtra(com.belajar.submissionawal.ui.detail.DetailActivity.EXTRA_EVENT_ID, event.id)
-            startActivity(intent)
-        }
-        binding.rvResults.layoutManager = LinearLayoutManager(requireContext())
-        binding.rvResults.adapter = adapter
-
-        val pref = SettingPreferences.getInstance(requireContext().dataStore)
-        val factory = ViewModelFactory.getInstance(requireContext(), pref)
-        val viewModel = ViewModelProvider(requireActivity(), factory)[EventViewModel::class.java]
-
-        binding.searchView.setupWithSearchBar(binding.searchBar)
-        binding.searchView.editText.setOnEditorActionListener { textView, _, _ ->
-            val query = textView.text.toString()
-            if (query.isNotEmpty()) {
-                binding.searchBar.setText(query)
-                binding.searchView.hide()
-                viewModel.searchEvents(query)
-                Toast.makeText(requireContext(), "Mencari: $query", Toast.LENGTH_SHORT).show()
+        binding.apply {
+            val adapter = EventAdapter { event ->
+                val intent = android.content.Intent(requireContext(), com.belajar.submissionawal.ui.detail.DetailActivity::class.java)
+                intent.putExtra(com.belajar.submissionawal.ui.detail.DetailActivity.EXTRA_EVENT_ID, event.id)
+                startActivity(intent)
             }
-            false
-        }
+            rvResults.layoutManager = LinearLayoutManager(requireContext())
+            rvResults.adapter = adapter
 
-        viewModel.searchResults.observe(viewLifecycleOwner) { events ->
-            if (events != null) {
-                adapter.submitList(events)
-                if (events.isEmpty()) {
-                    Toast.makeText(requireContext(), "Event tidak ditemukan", Toast.LENGTH_SHORT).show()
+            val pref = SettingPreferences.getInstance(requireContext().dataStore)
+            val factory = ViewModelFactory.getInstance(requireContext(), pref)
+            val viewModel = ViewModelProvider(requireActivity(), factory)[EventViewModel::class.java]
+
+            searchView.setupWithSearchBar(searchBar)
+            searchView.editText.setOnEditorActionListener { textView, _, _ ->
+                val query = textView.text.toString()
+                if (query.isNotEmpty()) {
+                    searchBar.setText(query)
+                    searchView.hide()
+                    viewModel.searchEvents(query)
+                    Toast.makeText(requireContext(), "Mencari: $query", Toast.LENGTH_SHORT).show()
+                }
+                false
+            }
+
+            viewModel.searchResults.observe(viewLifecycleOwner) { events ->
+                if (events != null) {
+                    adapter.submitList(events)
+                    if (events.isEmpty()) {
+                        Toast.makeText(requireContext(), "Event tidak ditemukan", Toast.LENGTH_SHORT).show()
+                    }
                 }
             }
-        }
 
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        }
+            viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+                progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
 
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            if (message != null) {
-                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+                if (message != null) {
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }

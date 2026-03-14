@@ -19,9 +19,9 @@ class DailyReminderWorker(context: Context, workerParams: WorkerParameters) :
         val repository = Injection.provideRepository(applicationContext)
         return try {
             val response = repository.getNearestEvent()
-            val event = response.listEvents.firstOrNull()
+            val event = response.listEvents?.firstOrNull()
             if (event != null) {
-                showNotification(event.name, event.beginTime)
+                showNotification(event.name ?: "Event", event.beginTime ?: "-")
             }
             Result.success()
         } catch (e: Exception) {

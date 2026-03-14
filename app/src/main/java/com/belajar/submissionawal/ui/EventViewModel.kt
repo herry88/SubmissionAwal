@@ -50,7 +50,7 @@ class EventViewModel(private val repository: EventRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = repository.searchEvents(query)
-                _searchResults.value = response.listEvents
+                _searchResults.value = response.listEvents ?: emptyList()
                 _errorMessage.value = null
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "An error occurred"
@@ -65,7 +65,7 @@ class EventViewModel(private val repository: EventRepository) : ViewModel() {
         viewModelScope.launch {
             try {
                 val response = repository.getEvents(active)
-                liveData.value = response.listEvents
+                liveData.value = response.listEvents ?: emptyList()
                 _errorMessage.value = null
             } catch (e: Exception) {
                 _errorMessage.value = e.message ?: "An error occurred"

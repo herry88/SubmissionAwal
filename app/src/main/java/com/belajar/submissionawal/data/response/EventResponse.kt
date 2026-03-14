@@ -5,56 +5,56 @@ import com.google.gson.annotations.SerializedName
 data class EventResponse(
 
 	@field:SerializedName("listEvents")
-	val listEvents: List<ListEventsItem>,
+	val listEvents: List<ListEventsItem>? = emptyList(),
 
 	@field:SerializedName("error")
-	val error: Boolean,
+	val error: Boolean = false,
 
 	@field:SerializedName("message")
-	val message: String
+	val message: String? = null
 )
 
 data class ListEventsItem(
 
 	@field:SerializedName("quota")
-	val quota: Int,
+	val quota: Int = 0,
 
 	@field:SerializedName("registrants")
-	val registrants: Int,
+	val registrants: Int = 0,
 
 	@field:SerializedName("beginTime")
-	val beginTime: String,
+	val beginTime: String? = null,
 
 	@field:SerializedName("endTime")
-	val endTime: String,
+	val endTime: String? = null,
 
 	@field:SerializedName("link")
-	val link: String,
+	val link: String? = null,
 
 	@field:SerializedName("description")
-	val description: String,
+	val description: String? = null,
 
 	@field:SerializedName("id")
-	val id: Int,
+	val id: Int = 0,
 
 	@field:SerializedName("imageLogo")
-	val imageLogo: String,
+	val imageLogo: String? = null,
 
 	@field:SerializedName("mediaCover")
-	val mediaCover: String,
+	val mediaCover: String? = null,
 
 	@field:SerializedName("name")
-	val name: String,
+	val name: String? = null,
 
 	@field:SerializedName("ownerName")
-	val ownerName: String,
+	val ownerName: String? = null,
 
 	@field:SerializedName("summary")
-	val summary: String,
+	val summary: String? = null,
 
 	@field:SerializedName("cityName")
-	val cityName: String,
+	val cityName: String? = null,
 
 	@field:SerializedName("category")
-	val category: String
+	val category: String? = null
 )
