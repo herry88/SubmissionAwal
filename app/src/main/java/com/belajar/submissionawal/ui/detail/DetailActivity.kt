@@ -94,6 +94,11 @@ class DetailActivity : AppCompatActivity() {
             tvEventName.text = event.name ?: "-"
             tvOwnerName.text = "Penyelenggara: ${event.ownerName ?: "-"}"
             tvBeginTime.text = "Waktu: ${formatToIndonesian(event.beginTime)}"
+
+            tvEventName.text = event.name
+            tvOwnerName.text = "Penyelenggara: ${event.ownerName}"
+            tvBeginTime.text = "Waktu: ${event.beginTime}"
+
             val sisaKuota = event.quota - event.registrants
             tvQuota.text = "Sisa Kuota: $sisaKuota"
             
