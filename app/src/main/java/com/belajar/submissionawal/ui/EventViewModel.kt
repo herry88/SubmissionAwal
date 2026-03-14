@@ -3,14 +3,12 @@ package com.belajar.submissionawal.ui
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.belajar.submissionawal.data.response.EventResponse
+import androidx.lifecycle.viewModelScope
+import com.belajar.submissionawal.data.EventRepository
 import com.belajar.submissionawal.data.response.ListEventsItem
-import com.belajar.submissionawal.data.retrofit.ApiConfig
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
+import kotlinx.coroutines.launch
 
-class EventViewModel : ViewModel() {
+class EventViewModel(private val repository: EventRepository) : ViewModel() {
 
     private val _upcomingEvents = MutableLiveData<List<ListEventsItem>>()
     val upcomingEvents: LiveData<List<ListEventsItem>> = _upcomingEvents
@@ -24,8 +22,8 @@ class EventViewModel : ViewModel() {
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
-    private val _errorMessage = MutableLiveData<String>()
-    val errorMessage: LiveData<String> = _errorMessage
+    private val _errorMessage = MutableLiveData<String?>()
+    val errorMessage: LiveData<String?> = _errorMessage
 
     fun getUpcomingEvents() {
         if (_upcomingEvents.value != null) return
@@ -49,41 +47,31 @@ class EventViewModel : ViewModel() {
 
     fun searchEvents(query: String) {
         _isLoading.value = true
-        val client = ApiConfig.getApiService().searchEvents(-1, query)
-        client.enqueue(object : Callback<EventResponse> {
-            override fun onResponse(call: Call<EventResponse>, response: Response<EventResponse>) {
+        viewModelScope.launch {
+            try {
+                val response = repository.searchEvents(query)
+                _searchResults.value = response.listEvents ?: emptyList()
+                _errorMessage.value = null
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "An error occurred"
+            } finally {
                 _isLoading.value = false
-                if (response.isSuccessful) {
-                    _searchResults.value = response.body()?.listEvents
-                } else {
-                    _errorMessage.value = "Error: ${response.message()}"
-                }
             }
-
-            override fun onFailure(call: Call<EventResponse>, t: Throwable) {
-                _isLoading.value = false
-                _errorMessage.value = "Failure: ${t.message}"
-            }
-        })
+        }
     }
 
     private fun fetchEvents(active: Int, liveData: MutableLiveData<List<ListEventsItem>>) {
         _isLoading.value = true
-        val client = ApiConfig.getApiService().getEvents(active)
-        client.enqueue(object : Callback<EventResponse> {
-            override fun onResponse(call: Call<EventResponse>, response: Response<EventResponse>) {
+        viewModelScope.launch {
+            try {
+                val response = repository.getEvents(active)
+                liveData.value = response.listEvents ?: emptyList()
+                _errorMessage.value = null
+            } catch (e: Exception) {
+                _errorMessage.value = e.message ?: "An error occurred"
+            } finally {
                 _isLoading.value = false
-                if (response.isSuccessful) {
-                    liveData.value = response.body()?.listEvents
-                } else {
-                    _errorMessage.value = "Error: ${response.message()}"
-                }
             }
-
-            override fun onFailure(call: Call<EventResponse>, t: Throwable) {
-                _isLoading.value = false
-                _errorMessage.value = "Failure: ${t.message}"
-            }
-        })
+        }
     }
 }

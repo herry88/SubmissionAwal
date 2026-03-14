@@ -8,8 +8,11 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.belajar.submissionawal.data.local.datastore.SettingPreferences
+import com.belajar.submissionawal.data.local.datastore.dataStore
 import com.belajar.submissionawal.databinding.FragmentUpcomingBinding
 import com.belajar.submissionawal.ui.EventViewModel
+import com.belajar.submissionawal.ui.ViewModelFactory
 import com.belajar.submissionawal.ui.adapter.EventAdapter
 
 class UpcomingFragment : Fragment() {
@@ -28,28 +31,35 @@ class UpcomingFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val layoutManager = LinearLayoutManager(requireContext())
-        binding.rvEvents.layoutManager = layoutManager
+        binding.apply {
+            val layoutManager = LinearLayoutManager(requireContext())
+            rvEvents.layoutManager = layoutManager
 
-        val viewModel = ViewModelProvider(requireActivity())[EventViewModel::class.java]
-
-        viewModel.upcomingEvents.observe(viewLifecycleOwner) { events ->
-            val adapter = EventAdapter()
-            adapter.submitList(events)
-            binding.rvEvents.adapter = adapter
-        }
-
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        }
-
-        viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
-            if (message.isNotEmpty()) {
-                Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+            val pref = SettingPreferences.getInstance(requireContext().dataStore)
+            val factory = ViewModelFactory.getInstance(requireContext(), pref)
+            val viewModel = ViewModelProvider(requireActivity(), factory)[EventViewModel::class.java]
+            viewModel.upcomingEvents.observe(viewLifecycleOwner) { events ->
+                val adapter = EventAdapter { event ->
+                    val intent = android.content.Intent(requireContext(), com.belajar.submissionawal.ui.detail.DetailActivity::class.java)
+                    intent.putExtra(com.belajar.submissionawal.ui.detail.DetailActivity.EXTRA_EVENT_ID, event.id)
+                    startActivity(intent)
+                }
+                adapter.submitList(events)
+                rvEvents.adapter = adapter
             }
-        }
 
-        viewModel.getUpcomingEvents()
+            viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+                progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+            }
+
+            viewModel.errorMessage.observe(viewLifecycleOwner) { message ->
+                if (message != null) {
+                    Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            viewModel.getUpcomingEvents()
+        }
     }
 
     override fun onDestroyView() {

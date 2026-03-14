@@ -2,23 +2,28 @@ package com.belajar.submissionawal.data.retrofit
 
 import com.belajar.submissionawal.data.response.DetailResponse
 import com.belajar.submissionawal.data.response.EventResponse
-import retrofit2.Call
 import retrofit2.http.*
 
 interface ApiService {
     @GET("events")
-    fun getEvents(
+    suspend fun getEvents(
         @Query("active") active: Int
-    ): Call<EventResponse>
+    ): EventResponse
 
     @GET("events")
-    fun searchEvents(
+    suspend fun searchEvents(
         @Query("active") active: Int = -1,
         @Query("q") query: String
-    ): Call<EventResponse>
+    ): EventResponse
 
     @GET("events/{id}")
-    fun getDetailEvent(
+    suspend fun getDetailEvent(
         @Path("id") id: String
-    ): Call<DetailResponse>
+    ): DetailResponse
+
+    @GET("events")
+    suspend fun getNearestEvent(
+        @Query("active") active: Int = -1,
+        @Query("limit") limit: Int = 1
+    ): EventResponse
 }

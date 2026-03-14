@@ -12,7 +12,7 @@ import com.bumptech.glide.Glide
 import android.content.Intent
 import com.belajar.submissionawal.ui.detail.DetailActivity
 
-class EventAdapter : ListAdapter<ListEventsItem, EventAdapter.MyViewHolder>(DIFF_CALLBACK) {
+class EventAdapter(private val onItemClick: (ListEventsItem) -> Unit = {}) : ListAdapter<ListEventsItem, EventAdapter.MyViewHolder>(DIFF_CALLBACK) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MyViewHolder {
         val binding = ItemEventBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -24,7 +24,7 @@ class EventAdapter : ListAdapter<ListEventsItem, EventAdapter.MyViewHolder>(DIFF
         holder.bind(event)
     }
 
-    class MyViewHolder(private val binding: ItemEventBinding) : RecyclerView.ViewHolder(binding.root) {
+    inner class MyViewHolder(private val binding: ItemEventBinding) : RecyclerView.ViewHolder(binding.root) {
         fun bind(event: ListEventsItem) {
             binding.tvEventName.text = event.name
             Glide.with(binding.root.context)
@@ -32,9 +32,7 @@ class EventAdapter : ListAdapter<ListEventsItem, EventAdapter.MyViewHolder>(DIFF
                 .into(binding.ivEventImage)
             
             binding.root.setOnClickListener {
-                val intent = Intent(binding.root.context, DetailActivity::class.java)
-                intent.putExtra(DetailActivity.EXTRA_EVENT_ID, event.id)
-                binding.root.context.startActivity(intent)
+                onItemClick(event)
             }
         }
     }
